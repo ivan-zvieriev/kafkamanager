@@ -1,30 +1,40 @@
 package com.ivanzvieriev.kafkamanager.controller;
 
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.ListTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 public class HelloWorldController {
 
+    @Autowired
+    private AdminClient adminClient;
+
     @GetMapping("/")
     public String greetings() {
-        Map<String, List<PartitionInfo>> topics;
-
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "0.0.0.0:10101");
-        props.put("group.id", "test-consumer-group");
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        topics = consumer.listTopics();
-        consumer.close();
-        return topics.toString();
+        List<NewTopic> topicsList = new ArrayList<>();
+        NewTopic topic1 = new NewTopic("topic_1", 1, (short)1);
+        NewTopic topic2 = new NewTopic("topic_2", 1, (short)1);
+        topicsList.add(topic1);
+        topicsList.add(topic2);
+        CreateTopicsResult ctr = adminClient.createTopics(topicsList);
+        ListTopicsResult result = adminClient.listTopics();
+        String stringResult = "";
+        try {
+            for (String topicName : result.names().get()) stringResult += topicName;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        return stringResult;
     }
 }
