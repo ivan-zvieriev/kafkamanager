@@ -42,15 +42,7 @@ class KafkaControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new KafkaController();
-        // Use reflection to set the mocked adminClient
-        try {
-            java.lang.reflect.Field adminClientField = KafkaController.class.getDeclaredField("adminClient");
-            adminClientField.setAccessible(true);
-            adminClientField.set(controller, adminClient);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set up test", e);
-        }
+        controller = new KafkaController(adminClient);
     }
 
     @Test
